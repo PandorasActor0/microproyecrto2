@@ -1,33 +1,16 @@
-FROM python:3.8-buster AS model-builder
+FROM node:14
 
-WORKDIR /app
+RUN mkdir -p /usr/src/app
 
-COPY requirements.txt .
+WORKDIR /usr/src/app
 
-RUN pip install -r requirements.txt
 
-COPY model.py .
-
-RUN python model.py
-
-RUN tensorflowjs_converter --input_format keras 'model.h5' 'model'
-
-#---
-
-FROM node:lts-alpine AS deploy
-
-WORKDIR /deployment
-
-COPY ["app/package.json", "app/package-lock.json", "./"]
+COPY package*.json ./
 
 RUN npm install
 
-COPY app/ .
-
-COPY --from=model-builder /app/model ./public/model
+COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "index.js"]
-
-# ---
+CMD ["node", "src/index.js"]
